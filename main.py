@@ -1,3 +1,4 @@
+import urllib.request
 import sys
 
 # Input type
@@ -15,6 +16,13 @@ class FileDownloader:
         self.target_url = arguments[0]
         self.lower_endpoint = arguments[1][:arguments[1].find("-")]
         self.upper_endpoint = arguments[1][arguments[1].rfind("-")+1:]
+
+    def downloadFile(self):
+
+        response = urllib.request.urlopen(self.target_url)
+        data = response.read()  # a `bytes` object
+        text = data.decode('utf-8')  # a `str`; this step can't be used if data is binary
+
     def __str__(self):
         return print(self.target_url +"\n"+ self.lower_endpoint + "\n" + self.upper_endpoint)
 
