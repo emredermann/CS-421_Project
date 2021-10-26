@@ -18,7 +18,6 @@ class FileDownloader:
         self.upper_endpoint = arguments[1][arguments[1].rfind("-")+1:]
 
     def downloadFile(self):
-
         response = urllib.request.urlopen(self.target_url)
         data = response.read()  # a `bytes` object
         text = data.decode('utf-8')  # a `str`; this step can't be used if data is binary
