@@ -1,5 +1,6 @@
-import urllib.request
+import socket
 import sys
+from socket import socket, error
 
 # Input type
 # FileDownloader <index_file> [<lower_endpoint>-<upper_endpoint>]
@@ -8,7 +9,7 @@ import sys
 <lower endpoint>-<upper endpoint>: [Optional] If this argument is not given, a file in the index is downloaded if it is found in the index. 
 Otherwise, the bytes between <lower endpoint> and <upper endpoint> inclusively are to be downloaded.
 """
-# Socket programming
+
 
 default_string_filler = "Not Available"
 class FileDownloader:
@@ -16,6 +17,7 @@ class FileDownloader:
         self.lower_endpoint = default_string_filler
         self.upper_endpoint = default_string_filler
         self.target_url = arguments[0]
+        self.target_port = 80
         if (len(arguments) > 1):
             self.lower_endpoint = arguments[1][:arguments[1].find("-")]
             self.upper_endpoint = arguments[1][arguments[1].rfind("-") + 1:]
@@ -30,26 +32,35 @@ class FileDownloader:
               " self.option : " + str(self.option))
 
 
-    def downloadFile(self):
-        response = urllib.request.urlopen(self.target_url)
-        if(response == "200 OK"):
-            data = response.read()  # a `bytes` object
-            while(data):
-                text = data.decode('utf-8')  # a `str`; this step can't be used if data is binary
-                head = response.head(text, timeout=2.50)
-                if self.option== 0:
-                    response = urllib.request.urlopen(head)
-                elif self.option== 1:
-                    pass
-                elif self.option== 2:
-                    pass
-                elif self.option== 3:
-                    pass
+    def send_request(self,target_url):
 
-                data = response.read()  # a `bytes` object
-        else:
-            print("exception occured ")
+        # Socket programming
+        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # connect the client
+        client.connect((target_url, self.target_port))
 
+        # send some data
+        request = "GET / HTTP/1.1\r\nHost:%s\r\n\r\n" % target_url
+        client.send(request.encode())
+
+        # receive some data
+        response = client.recv(4096)
+        http_response = repr(response)
+        http_response_len = len(http_response)
+
+
+    def post_request(self):
+        headers = """GET {} HTTP/1.1
+                        Host: {}\r\n\r\n""".format(self.target_url)
+        try:
+            s = socket()
+            s.connect((self.target_url, int(self.target_port)))
+            s.settimeout(4)
+            s.send(headers.encode())
+            s.recv(800)
+            s.close()
+        except error:
+            s.close()
 
     def __str__(self):
         return print(self.target_url +"\n"+ self.lower_endpoint + "\n" + self.upper_endpoint)
