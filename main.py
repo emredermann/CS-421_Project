@@ -1,6 +1,6 @@
 import socket
 import sys
-
+import os
 
 # Input type
 # FileDownloader <index_file> [<lower_endpoint>-<upper_endpoint>]
@@ -18,10 +18,13 @@ class FileDownloader:
         self.upper_endpoint = default_string_filler
         self.target_url = arguments[0]
         self.target_port = 80
+        self.buffer_size = 1024
+
         if (len(arguments) > 1):
             self.lower_endpoint = arguments[1][:arguments[1].find("-")]
             self.upper_endpoint = arguments[1][arguments[1].rfind("-") + 1:]
             self.option = 1
+            self.buffer_size = 1024
         else :
             # Option 0 means no boundary
             # Option 1 means boundary
@@ -66,6 +69,22 @@ class FileDownloader:
         # connecting to the server
         s.connect((host_ip, self.target_port))
         print("the socket has successfully connected.")
+
+        filename = self.target_url[self.target_url.find("/"):].encode()
+        s.send(filename)
+        with open( self.target_url[self.target_url.rfind("/")+1:], 'wb') as file_to_write:
+            print("File opened ! ")
+            while True:
+                data = s.recv(self.buffer_size)
+                print(" Data transferring from server ...")
+                data = data.decode("utf-8")
+                file_to_write.write(data)
+                if not data:
+                    print("No more data !")
+                    break
+            file_to_write.close()
+            print("File closed.")
+        s.close()
 
 
 arguments = sys.argv
