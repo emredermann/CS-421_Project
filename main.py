@@ -1,6 +1,5 @@
 import socket
 import sys
-from socket import socket, error
 
 # Input type
 # FileDownloader <index_file> [<lower_endpoint>-<upper_endpoint>]
@@ -17,7 +16,7 @@ class FileDownloader:
         self.lower_endpoint = default_string_filler
         self.upper_endpoint = default_string_filler
         self.target_url = arguments[0]
-        self.target_port = 80
+        self.port = 80
         if (len(arguments) > 1):
             self.lower_endpoint = arguments[1][:arguments[1].find("-")]
             self.upper_endpoint = arguments[1][arguments[1].rfind("-") + 1:]
@@ -48,6 +47,26 @@ class FileDownloader:
         http_response = repr(response)
         http_response_len = len(http_response)
 
+    def example_request(self):
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            print("Socket successfully created")
+        except socket.error as err:
+            print("socket creation failed with error %s" % (err))
+            sys.exit()
+
+        # default port for socket
+        try:
+            host_ip = socket.gethostbyname(self.target_url)
+            print("Host IP is : "+host_ip)
+        except socket.gaierror:
+            # this means could not resolve the host
+            print("there was an error resolving the host")
+            sys.exit()
+
+        # connecting to the server
+        s.connect((host_ip, self.port))
+        print("the socket has successfully connected.")
 
     def post_request(self):
         headers = """GET {} HTTP/1.1
@@ -68,4 +87,12 @@ class FileDownloader:
 arguments = sys.argv
 arguments = arguments[1:]
 file_ptr = FileDownloader(arguments)
+file_ptr.example_request()
 
+
+
+"""
+RESOURCES
+
+https://www.codestudyblog.com/cnb/0624123507.html
+"""
