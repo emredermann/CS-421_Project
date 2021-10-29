@@ -18,7 +18,7 @@ class FileDownloader:
         self.upper_endpoint = default_string_filler
         self.target_url = arguments[0]
         self.target_port = 80
-        self.buffer_size = 1024
+        self.buffer_size = 2048
 
         if (len(arguments) > 1):
             self.lower_endpoint = arguments[1][:arguments[1].find("-")]
@@ -33,19 +33,6 @@ class FileDownloader:
               " self.upper : " + self.upper_endpoint+ "\n"
               " self.target : " + self.target_url+ "\n"
               " self.option : " + str(self.option))
-
-    def post_request(self):
-        headers = """GET {} HTTP/1.1
-                        Host: {}\r\n\r\n""".format(self.target_url)
-        try:
-            s = socket()
-            s.connect((self.target_url, int(self.target_port)))
-            s.settimeout(4)
-            s.send(headers.encode())
-            s.recv(800)
-            s.close()
-        except error:
-            s.close()
 
     def __str__(self):
         return print(self.target_url +"\n"+ self.lower_endpoint + "\n" + self.upper_endpoint)
@@ -70,18 +57,23 @@ class FileDownloader:
         s.connect((host_ip, self.target_port))
         print("the socket has successfully connected.")
 
-        filename = self.target_url[self.target_url.find("/"):].encode()
-        s.send(filename)
+        filename = str.encode(self.target_url[self.target_url.find("/"):])
+
+        print("send status : " + str(s.send(filename)))
         with open( self.target_url[self.target_url.rfind("/")+1:], 'wb') as file_to_write:
             print("File opened ! ")
             while True:
+                ## Possible problem.
+                print(" Data transferring started from server ...")
                 data = s.recv(self.buffer_size)
-                print(" Data transferring from server ...")
-                data = data.decode("utf-8")
-                file_to_write.write(data)
+                print(" Data transferring finished from server ...")
+                ##
                 if not data:
                     print("No more data !")
                     break
+                file_to_write.write(data)
+                file_to_write.write("INSIDE".encode())
+            file_to_write.write("TEST".encode())
             file_to_write.close()
             print("File closed.")
         s.close()
