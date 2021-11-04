@@ -24,6 +24,7 @@ class FileDownloader:
             self.lower_endpoint = arguments[1][:arguments[1].find("-")]
             self.upper_endpoint = arguments[1][arguments[1].rfind("-") + 1:]
             self.option = 1
+            self.host_ip = ""
             self.buffer_size = 1024
         else :
             # Option 0 means no boundary
@@ -47,14 +48,14 @@ class FileDownloader:
             sys.exit()
         # default port for socket
         try:
-            host_ip = socket.gethostbyname(self.target_url[:self.target_url.find("/")])
-            print("Host IP is : " + host_ip)
+            self.host_ip = socket.gethostbyname(self.target_url[:self.target_url.find("/")])
+            print("Host IP is : " + self.host_ip)
         except socket.gaierror:
             # this means could not resolve the host
             print("there was an error resolving the host")
             sys.exit()
         # connecting to the server
-        s.connect((host_ip, self.target_port))
+        s.connect((self.host_ip, self.target_port))
         print("the socket has successfully connected.")
 
         filename = str.encode(self.target_url[self.target_url.find("/"):])
@@ -72,8 +73,6 @@ class FileDownloader:
                     print("No more data !")
                     break
                 file_to_write.write(data)
-                file_to_write.write("INSIDE".encode())
-            file_to_write.write("TEST".encode())
             file_to_write.close()
             print("File closed.")
         s.close()
