@@ -17,7 +17,7 @@ class FileDownloader:
         self.lower_endpoint = default_string_filler
         self.upper_endpoint = default_string_filler
         self.target_url = arguments[0]
-        self.target_port = 80
+        self.target_port = 8000
         self.buffer_size = 2048
 
         if (len(arguments) > 1):
