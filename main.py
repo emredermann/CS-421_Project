@@ -50,31 +50,29 @@ file_name = target_url[target_url.rfind("/")+1:]
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 
-print("Target url is : "+ target_url[:target_url.find("/")])
-server_hostname = socket.gethostbyname(target_url[:target_url.find("/")])
+print("Target url is : "+ target_url)
+server_hostIP = socket.gethostbyname(target_url[:target_url.find("/")])
 
-# server_hostname = socket.gethostbyname('google.com')
-print("server_hostname : "+server_hostname)
+# server_hostIP = socket.gethostbyname('google.com')
+print("server_hostIP : "+server_hostIP)
 
 server_port = 8000
 
 # Will be changed according to the arguments
 BUFFER_SIZE = 1024
 
-print(" self.lower : " + lower_endpoint+ "\n"
-              " self.upper : " + upper_endpoint+ "\n"
-              " self.target : " + target_url+ "\n")
-
+print("self.lower : " + lower_endpoint+ "\n"
+              "self.upper : " + upper_endpoint+ "\n"
+              "host : " + target_url[:target_url.find("/")]+ "\n")
 
 # Connect to the server
-s.connect((server_hostname, server_port))
-print(f'Connected to {server_hostname} on {server_port} port.')
+s.connect((server_hostIP, server_port))
+print(f'Connected to {server_hostIP} on {server_port} port.')
 
 # Make a GET request
 try:
     # Get index.html and save it to
     msg = get_request_msg(file_name)
-
     print('Sending request...')
     s.sendall(msg.encode())
     response1 = s.recv(BUFFER_SIZE)
