@@ -1,3 +1,4 @@
+import base64
 import socket
 import sys
 import os
@@ -10,76 +11,66 @@ import os
 Otherwise, the bytes between <lower endpoint> and <upper endpoint> inclusively are to be downloaded.
 """
 
+def get_request_msg(filename: str, request_type="GET", custom_header=""):
+    msg = f'{request_type} /{filename} HTTP/1.1\r\n'
+    msg += f'Host: {target_url}:8000\r\n'
+    # Append the custom header
+    msg += custom_header + '\r\n'
+    msg += '\r\n'
+    return msg
+
+def make_request(filename,range):
+    range_header = "Range: bytes=0-{}".format(range)
+    message = get_request_msg(
+        filename, request_type="HEAD", custom_header=range_header)
+    print("message is : " + message)
+    s.sendall(message.encode())
+    response = s.recv(500)
+    with open(filename, 'w') as file:
+        file.write(response.decode())
+    return response.decode()
+
 
 default_string_filler = "Not Available"
-class FileDownloader:
-    def __init__(self,arguments):
-        self.lower_endpoint = default_string_filler
-        self.upper_endpoint = default_string_filler
-        self.target_url = arguments[0]
-        self.target_port = 8000
-        self.buffer_size = 2048
-
-        if (len(arguments) > 1):
-            self.lower_endpoint = arguments[1][:arguments[1].find("-")]
-            self.upper_endpoint = arguments[1][arguments[1].rfind("-") + 1:]
-            self.option = 1
-            self.host_ip = ""
-            self.buffer_size = 1024
-        else :
-            # Option 0 means no boundary
-            # Option 1 means boundary
-            self.option = 0
-        print(" self.lower : " + self.lower_endpoint+ "\n"
-              " self.upper : " + self.upper_endpoint+ "\n"
-              " self.target : " + self.target_url+ "\n"
-              " self.option : " + str(self.option))
-
-    def __str__(self):
-        return print(self.target_url +"\n"+ self.lower_endpoint + "\n" + self.upper_endpoint)
-
-
-    def send_request(self):
-        try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            print("Socket successfully created")
-        except socket.error as err:
-            print("socket creation failed with error %s" % (err))
-            sys.exit()
-        # default port for socket
-        try:
-            self.host_ip = socket.gethostbyname(self.target_url[:self.target_url.find("/")])
-            print("Host IP is : " + self.host_ip)
-        except socket.gaierror:
-            # this means could not resolve the host
-            print("there was an error resolving the host")
-            sys.exit()
-        # connecting to the server
-        s.connect((self.host_ip, self.target_port))
-        print("the socket has successfully connected.")
-
-        filename = str.encode(self.target_url[self.target_url.find("/"):])
-
-        print("send status : " + str(s.send(filename)))
-        with open( self.target_url[self.target_url.rfind("/")+1:], 'wb') as file_to_write:
-            print("File opened ! ")
-            while True:
-                ## Possible problem.
-                print(" Data transferring started from server ...")
-                data = s.recv(self.buffer_size)
-                print(" Data transferring finished from server ...")
-                ##
-                if not data:
-                    print("No more data !")
-                    break
-                file_to_write.write(data)
-            file_to_write.close()
-            print("File closed.")
-        s.close()
-
-
+print("program has been started")
 arguments = sys.argv
 arguments = arguments[1:]
-file_ptr = FileDownloader(arguments)
-file_ptr.send_request()
+if len(arguments) > 1:
+    lower_endpoint = arguments[1][:arguments[1].find("-")]
+    upper_endpoint = arguments[1][arguments[1].rfind("-") + 1:]
+else:
+    lower_endpoint = default_string_filler
+    upper_endpoint = default_string_filler
+
+target_url = arguments[0]
+file_name = target_url[target_url.rfind("/")+1:]
+s = socket.socket()
+print("Target url is : "+ target_url)
+server_hostname = socket.gethostbyname(target_url)
+# server_hostname = socket.gethostbyname('google.com')
+print("server_hostname : "+server_hostname)
+server_port = 8000
+server_address = (server_hostname, server_port)
+
+BUFFER_SIZE = 1024
+print(" self.lower : " + lower_endpoint+ "\n"
+              " self.upper : " + upper_endpoint+ "\n"
+              " self.target : " + target_url+ "\n")
+
+
+# Connect to the server
+s.connect(server_address)
+print(f'Connected to {server_hostname} on {server_port} port.')
+
+# Make a GET request
+try:
+    # Get index.html and save it to
+    msg = get_request_msg(file_name)
+
+    print('Sending request...')
+    s.sendall(msg.encode())
+    response1 = s.recv(BUFFER_SIZE)
+finally:
+    s.close()
+    print('Connection was closed.')
 
