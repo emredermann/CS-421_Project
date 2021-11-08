@@ -34,6 +34,10 @@ default_string_filler = "Not Available"
 print("program has been started")
 arguments = sys.argv
 arguments = arguments[1:]
+
+# To make choice option 1 or to which are range declaration
+# Will be changed in order to code simplification.
+
 if len(arguments) > 1:
     lower_endpoint = arguments[1][:arguments[1].find("-")]
     upper_endpoint = arguments[1][arguments[1].rfind("-") + 1:]
@@ -43,22 +47,27 @@ else:
 
 target_url = arguments[0]
 file_name = target_url[target_url.rfind("/")+1:]
-s = socket.socket()
-print("Target url is : "+ target_url)
-server_hostname = socket.gethostbyname(target_url)
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+
+print("Target url is : "+ target_url[:target_url.find("/")])
+server_hostname = socket.gethostbyname(target_url[:target_url.find("/")])
+
 # server_hostname = socket.gethostbyname('google.com')
 print("server_hostname : "+server_hostname)
-server_port = 8000
-server_address = (server_hostname, server_port)
 
+server_port = 8000
+
+# Will be changed according to the arguments
 BUFFER_SIZE = 1024
+
 print(" self.lower : " + lower_endpoint+ "\n"
               " self.upper : " + upper_endpoint+ "\n"
               " self.target : " + target_url+ "\n")
 
 
 # Connect to the server
-s.connect(server_address)
+s.connect((server_hostname, server_port))
 print(f'Connected to {server_hostname} on {server_port} port.')
 
 # Make a GET request
