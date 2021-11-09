@@ -9,8 +9,8 @@ import os
 <lower endpoint>-<upper endpoint>: [Optional] If this argument is not given, a file in the index is downloaded if it is found in the index. 
 Otherwise, the bytes between <lower endpoint> and <upper endpoint> inclusively are to be downloaded.
 """
-def get_request_msg(filename: str, request_type="GET", custom_header=""):
-    msg = f'{request_type} /{target_url[target_url.find("/"):]} HTTP/1.1\r\nHost:%s\r\n\r\n'%target_url[:target_url.find("/")]
+def get_request_msg(target_download_url: str, request_type="GET", custom_header=""):
+    msg = f'{request_type} /{target_download_url[target_download_url.find("/"):]} HTTP/1.1\r\nHost:%s\r\n\r\n'%target_download_url[:target_download_url.find("/")]
     return msg
 
 def make_request(filename,range):
@@ -69,7 +69,7 @@ print(f'Connected to {server_hostIP} on {server_port} port.')
 try:
     # Get  and save it to
     range_header = "Range: bytes = 0-999"
-    msg = get_request_msg(file_name, request_type="GET", custom_header = range_header)
+    msg = get_request_msg(target_url, request_type="GET", custom_header = range_header)
     print('Sending request...')
     print("Message is : " + msg)
     s.sendall(msg.encode())
