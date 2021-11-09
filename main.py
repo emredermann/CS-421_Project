@@ -9,13 +9,8 @@ import os
 <lower endpoint>-<upper endpoint>: [Optional] If this argument is not given, a file in the index is downloaded if it is found in the index. 
 Otherwise, the bytes between <lower endpoint> and <upper endpoint> inclusively are to be downloaded.
 """
-
 def get_request_msg(filename: str, request_type="GET", custom_header=""):
-    msg = f'{request_type} /{filename} HTTP/1.1\r\n'
-    msg += f'Host: {target_url}:8000\r\n'
-    # Append the custom header
-    msg += custom_header + '\r\n'
-    msg += '\r\n'
+    msg = f'{request_type} /{target_url[target_url.find("/"):]} HTTP/1.1\r\nHost:%s\r\n\r\n'%target_url[:target_url.find("/")]
     return msg
 
 def make_request(filename,range):
@@ -45,6 +40,7 @@ else:
     lower_endpoint = default_string_filler
     upper_endpoint = default_string_filler
 
+
 target_url = arguments[0]
 file_name = target_url[target_url.rfind("/")+1:]
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -56,13 +52,13 @@ server_hostIP = socket.gethostbyname(target_url[:target_url.find("/")])
 # server_hostIP = socket.gethostbyname('google.com')
 print("server_hostIP : "+server_hostIP)
 
-server_port = 8000
+server_port = 80
 
 # Will be changed according to the arguments
-BUFFER_SIZE = 1024
+BUFFER_SIZE = 2048
 
 print("self.lower : " + lower_endpoint+ "\n"
-              "self.upper : " + upper_endpoint+ "\n"
+              "upper : " + upper_endpoint+ "\n"
               "host : " + target_url[:target_url.find("/")]+ "\n")
 
 # Connect to the server
@@ -71,12 +67,14 @@ print(f'Connected to {server_hostIP} on {server_port} port.')
 
 # Make a GET request
 try:
-    # Get index.html and save it to
-    msg = get_request_msg(file_name)
+    # Get  and save it to
+    range_header = "Range: bytes = 0-999"
+    msg = get_request_msg(file_name, request_type="GET", custom_header = range_header)
     print('Sending request...')
+    print("Message is : " + msg)
     s.sendall(msg.encode())
     response1 = s.recv(BUFFER_SIZE)
-finally:
+    print(response1.decode())
+except:
     s.close()
     print('Connection was closed.')
-
