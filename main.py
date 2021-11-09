@@ -74,7 +74,10 @@ try:
     print("Message is : " + msg)
     s.sendall(msg.encode())
     response1 = s.recv(BUFFER_SIZE)
-    print(response1.decode())
+    # response1 = response1[response1.rfind("\r"):]
+    url_list = response1.decode().split("\n")
+    url_list = url_list[url_list.index('\r')+1:-1]
+    print(url_list)
 except:
     s.close()
     print('Connection was closed.')
