@@ -13,16 +13,16 @@ def get_request_msg(target_download_url: str, request_type="GET", custom_header=
     msg = f'{request_type} /{target_download_url[target_download_url.find("/"):]} HTTP/1.1\r\nHost:%s\r\n\r\n'%target_download_url[:target_download_url.find("/")]
     return msg
 
-def make_request(filename,range):
-    range_header = "Range: bytes=0-{}".format(range)
-    message = get_request_msg(
-        filename, request_type="HEAD", custom_header=range_header)
-    print("message is : " + message)
-    s.sendall(message.encode())
-    response = s.recv(500)
-    with open(filename, 'w') as file:
-        file.write(response.decode())
-    return response.decode()
+# def make_request(filename,range):
+#     range_header = "Range: bytes=0-{}".format(range)
+#     message = get_request_msg(
+#         filename, request_type="HEAD", custom_header=range_header)
+#     print("message is : " + message)
+#     s.sendall(message.encode())
+#     response = s.recv(500)
+#     with open(filename, 'w') as file:
+#         file.write(response.decode())
+#     return response.decode()
 
 
 default_string_filler = "Not Available"
@@ -66,18 +66,36 @@ s.connect((server_hostIP, server_port))
 print(f'Connected to {server_hostIP} on {server_port} port.')
 
 # Make a GET request
-try:
-    # Get  and save it to
-    range_header = "Range: bytes = 0-999"
-    msg = get_request_msg(target_url, request_type="GET", custom_header = range_header)
-    print('Sending request...')
-    print("Message is : " + msg)
-    s.sendall(msg.encode())
-    response1 = s.recv(BUFFER_SIZE)
-    # response1 = response1[response1.rfind("\r"):]
-    url_list = response1.decode().split("\n")
-    url_list = url_list[url_list.index('\r')+1:-1]
-    print(url_list)
-except:
-    s.close()
-    print('Connection was closed.')
+# Get  and save it to
+range_header = "Range: bytes = 0-999"
+msg = get_request_msg(target_url, request_type="GET", custom_header = range_header)
+print('Sending request...')
+print("Message is : " + msg)
+s.sendall(msg.encode())
+response1 = s.recv(BUFFER_SIZE)
+# response1 = response1[response1.rfind("\r"):]
+url_list = response1.decode().split("\n")
+url_list = url_list[url_list.index('\r')+1:-1]
+print(url_list)
+for x in url_list:
+        print("X is " + x)
+        msg = get_request_msg(x, request_type="GET", custom_header=range_header)
+        print('Sending request...')
+        print("Message is : " + msg)
+        s.sendall(msg.encode())
+        response = s.recv(BUFFER_SIZE)
+        if response.decode().find("<h1>Not Found</h1>")>0:
+            print("File not Found...")
+            pass
+        else:
+            sub_url_list = response.decode()
+            # sub_url_list = response.decode().split("\n")
+            try:
+                # sub_url_list = sub_url_list[sub_url_list.index('\r') + 1:-1]
+                pass
+            except:
+                pass
+            print(sub_url_list)
+        print("******************************* \n \n")
+s.close()
+print('Connection was closed.')
