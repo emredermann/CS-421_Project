@@ -79,9 +79,8 @@ for x in url_list:
                 content_length = 0
 
                 if len(tmp) > 1:
-                    t = tmp[1]
-                    content_length = int(t)
-                    print(f'{tmp[0]} is : ' + tmp[1])
+                    content_length = tmp[1]
+                    # print(f'{tmp[0]} is : ' + tmp[1])
                     if not range_is_given:
                         range_header = f"Range: bytes = 0-{content_length}"
                         msg = get_request_msg(x, request_type="GET", custom_header=range_header)
@@ -100,8 +99,8 @@ for x in url_list:
                         print(str(counter) + f" {x}" +  f"(size={content_length}) is not downloaded")
 
 ##### Hata burada
-                    elif int(lower_endpoint) <= content_length:
-                        local_range_header = f"Range: bytes = {lower_endpoint}-{min(upper_endpoint,content_length)}"
+                    elif int(lower_endpoint) <= int(content_length):
+                        local_range_header = f"Range: bytes = {lower_endpoint}-{min(upper_endpoint,int(content_length))}"
                         msg = get_request_msg(x, request_type="GET", custom_header=local_range_header)
                         s.sendall(msg.encode())
                         response = s.recv(BUFFER_SIZE)
