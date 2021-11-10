@@ -31,7 +31,7 @@ server_hostIP = socket.gethostbyname(target_url[:target_url.find("/")])
 
 server_port = 80
 
-BUFFER_SIZE = 4096
+BUFFER_SIZE = 2048
 
 # Connect to the server
 s.connect((server_hostIP, server_port))
@@ -42,7 +42,6 @@ print(f'Connected to {server_hostIP} on {server_port} port.')
 range_header = "Range: bytes = 0-2048"
 msg = get_request_msg(target_url, request_type="GET", custom_header = range_header)
 print('Sending request...')
-
 try:
     s.sendall(msg.encode())
     response = s.recv(BUFFER_SIZE)
@@ -66,17 +65,18 @@ for x in url_list:
         response = s.recv(BUFFER_SIZE)
         response = response.decode()
         response1 = response.split("\n")
-        tmp = (response1[-4].split(" "))
-        content_length = 0
 
-        if len(tmp) > 1:
-            if tmp[0] == "Content-Length":
-                content_length = int(tmp[1])
-                print(f'{tmp[0]} is : ' + tmp[1])
         if response1[0] == ('HTTP/1.1 404 Not Found\r'):
             print(str(counter)+" " + f"{x}  not found...")
         else:
-            print(response)
+            tmp = (response1[-4].split(" "))
+            content_length = 0
+
+            if len(tmp) > 0:
+                if tmp[0] == "Content-Length":
+                    content_length = int(tmp[1])
+                    print(f'{tmp[0]} is : ' + tmp[1])
+
             if(range_is_given == False):
                 range_header = f"Range: bytes = 0-{content_length}"
                 msg = get_request_msg(x, request_type="GET", custom_header=range_header)
@@ -84,13 +84,15 @@ for x in url_list:
                 response = s.recv(BUFFER_SIZE)
                 data = response.decode()
                 response1 = data.split("\n")
+
                 if response1[0] == ('HTTP/1.1 404 Not Found\r'):
                     print(str(counter)+" " + f"{x}"+ f"(size={content_length}) is not downloaded")
                 else:
                     with open(x[x.rfind('/')+1:], 'wb') as file:
-                        file.write(response)
+                        file.write(response[y])
                     print(str(counter)+" " + x + " " + range_header + " is downloaded")
-            elif(int(lower_endpoint) > content_length):
+
+            elif(int(lower_endpoint) > int(tmp[1][:-2])):
                 print(str(counter) +
                       f" {x}" +  f"(size={content_length}) is not downloaded")
 
@@ -101,11 +103,18 @@ for x in url_list:
                 response = s.recv(BUFFER_SIZE)
                 data = response.decode()
                 response1 = data.split("\n")
+
                 if response1[0] == ('HTTP/1.1 404 Not Found\r'):
-                    print(str(counter)+" " +f"{x}") + f"(size={content_length}) is not downloaded"
+                    print(str(counter)+" " + f"{x}") + f"(size={content_length}) is not downloaded"
                 else:
                     with open(x[x.rfind('/') + 1:], 'wb') as file:
-                        file.write(response)
+                        internal_counter = lower_endpoint
+                        for y in range(len(response)):
+                            if y>= internal_counter:
+                                file.write(bytes(response[y]))
+                            elif y>=upper_endpoint:
+                                break
+                            internal_counter += 1
                     print(str(counter) + " " + x + " " + local_range_header + " is downloaded")
         counter += 1
 s.close()
