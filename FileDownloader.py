@@ -68,70 +68,58 @@ for x in url_list:
         if response1[0] == 'HTTP/1.1 404 Not Found\r':
             print(str(counter)+" " + f"{x}  not found...")
         else:
-            tmp = (response1[-4].split(" "))
-            for p in range(0,len(tmp)):
-                if tmp[p].find("\r") > 0:
-                    tmp[p] = tmp[p].replace("\r","")
-            content_length = 0
+            if len(response1) > 6:
+                tmp = (response1[-4].split(" "))
+                for p in range(0,len(tmp)):
+                    if tmp[p].find("\r") > 0:
+                        tmp[p] = tmp[p].replace("\r","")
 
-            if len(tmp) > 1:
-                if tmp[0] == "Content-Length":
+                #Default content_length
+                content_length = 0
+
+                if len(tmp) > 1:
                     content_length = int(tmp[1])
-                    print(f'{tmp[0]} is : ' + tmp[1])
+                    # print(f'{tmp[0]} is : ' + tmp[1])
+                    if not range_is_given:
+                        range_header = f"Range: bytes = 0-{content_length}"
+                        msg = get_request_msg(x, request_type="GET", custom_header=range_header)
+                        s.sendall(msg.encode())
+                        response = s.recv(BUFFER_SIZE)
+                        data = response.decode()
+                        response1 = data.split("\n")
+                        if response1[0] == 'HTTP/1.1 404 Not Found\r':
+                            print(str(counter)+" " + f"{x}"+ f"(size={content_length}) is not downloaded")
+                        else:
+                            with open(x[x.rfind('/')+1:], 'wb') as file:
+                                file.write(response)
+                            print(str(counter)+" " + x + " " + range_header + " is downloaded")
 
+                    elif int(lower_endpoint) > int(tmp[1]):
+                        print(str(counter) + f" {x}" +  f"(size={content_length}) is not downloaded")
 
-                if not range_is_given:
-                    range_header = f"Range: bytes = 0-{content_length}"
-                    msg = get_request_msg(x, request_type="GET", custom_header=range_header)
-                    s.sendall(msg.encode())
-                    response = s.recv(BUFFER_SIZE)
-                    data = response.decode()
-                    response1 = data.split("\n")
+                    elif int(lower_endpoint) <= content_length:
+                        local_range_header = f"Range: bytes = {lower_endpoint}-{upper_endpoint}"
+                        msg = get_request_msg(x, request_type="GET", custom_header=local_range_header)
+                        s.sendall(msg.encode())
+                        response = s.recv(BUFFER_SIZE)
+                        data = response.decode()
+                        response1 = data.split("\n")
+                        if response1[0] == 'HTTP/1.1 404 Not Found\r':
+                            print(str(counter)+" " + f"{x}") + f"(size={content_length}) is not downloaded"
+                        else:
+                            with open(x[x.rfind('/') + 1:], 'wb') as file:
+                                bytes_recd = 0
+                                while bytes_recd < content_length:
+                                    chunk = s.recv(min(content_length - bytes_recd, BUFFER_SIZE))
+                                    if chunk == b'':
+                                        break
+                                    file.write(chunk)
+                                    bytes_recd = bytes_recd + len(chunk)
 
-                    if response1[0] == 'HTTP/1.1 404 Not Found\r':
-                        print(str(counter)+" " + f"{x}"+ f"(size={content_length}) is not downloaded")
-                    else:
-                        with open(x[x.rfind('/')+1:], 'wb') as file:
-                            file.write(response)
-                        print(str(counter)+" " + x + " " + range_header + " is downloaded")
-
-                elif int(lower_endpoint) > int(tmp[1]):
-                    print(str(counter) +
-                          f" {x}" +  f"(size={content_length}) is not downloaded")
-
-                elif int(lower_endpoint) <= content_length:
-                    local_range_header = f"Range: bytes = {lower_endpoint}-{upper_endpoint}"
-                    msg = get_request_msg(x, request_type="GET", custom_header=local_range_header)
-                    s.sendall(msg.encode())
-                    response = s.recv(BUFFER_SIZE)
-                    data = response.decode()
-                    response1 = data.split("\n")
-                    if response1[0] == 'HTTP/1.1 404 Not Found\r':
-                        print(str(counter)+" " + f"{x}") + f"(size={content_length}) is not downloaded"
-                    else:
-                        with open(x[x.rfind('/') + 1:], 'wb') as file:
-                            bytes_recd = 0
-                            while bytes_recd < content_length:
-                                chunk = s.recv(min(content_length - bytes_recd, BUFFER_SIZE))
-                                if chunk == b'':
-                                    raise RuntimeError("socket connection broken")
-                                file.write(chunk)
-                                bytes_recd = bytes_recd + len(chunk)
-
-                            """internal_counter = lower_endpoint
-                            for byte in response:
-                                file.write(byte)
-                                #print >> fh2, byte
-    
-                                  for y in range(len(response)):
-                                if y>= internal_counter:
-                                    file.write(bytes(response[y]))
-                                elif y>=upper_endpoint:
-                                    break
-                                internal_counter += 1"""
-
-                        print(str(counter) + " " + x + " " + local_range_header + " is downloaded")
-                counter += 1
+                            print(str(counter) + " " + x + " " + local_range_header + " is downloaded")
+                    counter += 1
+                else:
+                    pass
             else:
                 pass
 s.close()
