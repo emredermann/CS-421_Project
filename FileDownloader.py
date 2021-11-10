@@ -30,7 +30,7 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_hostIP = socket.gethostbyname(target_url[:target_url.find("/")])
 
 server_port = 80
-BUFFER_SIZE = 4096
+BUFFER_SIZE = 2048
 
 # Connect to the server
 s.connect((server_hostIP, server_port))
@@ -59,7 +59,7 @@ print(f"There are {len(url_list)} files in the index. ")
 counter = 1
 for x in url_list:
         # Request type changed to HEAD
-        msg = get_request_msg(x, request_type="HEAD", custom_header=range_header)
+        msg = get_request_msg(x, request_type="HEAD", custom_header = range_header)
         s.sendall(msg.encode())
         response = s.recv(BUFFER_SIZE)
         response = response.decode()
@@ -67,8 +67,9 @@ for x in url_list:
 
         if response1[0] == 'HTTP/1.1 404 Not Found\r':
             print(str(counter)+" " + f"{x}  not found...")
+            counter += 1
         else:
-            if len(response1) > 6:
+            if len(response1) > 4:
                 tmp = (response1[-4].split(" "))
                 for p in range(0,len(tmp)):
                     if tmp[p].find("\r") > 0:
@@ -78,8 +79,9 @@ for x in url_list:
                 content_length = 0
 
                 if len(tmp) > 1:
-                    content_length = int(tmp[1])
-                    # print(f'{tmp[0]} is : ' + tmp[1])
+                    t = tmp[1]
+                    content_length = int(t)
+                    print(f'{tmp[0]} is : ' + tmp[1])
                     if not range_is_given:
                         range_header = f"Range: bytes = 0-{content_length}"
                         msg = get_request_msg(x, request_type="GET", custom_header=range_header)
@@ -97,8 +99,9 @@ for x in url_list:
                     elif int(lower_endpoint) > int(tmp[1]):
                         print(str(counter) + f" {x}" +  f"(size={content_length}) is not downloaded")
 
+##### Hata burada
                     elif int(lower_endpoint) <= content_length:
-                        local_range_header = f"Range: bytes = {lower_endpoint}-{upper_endpoint}"
+                        local_range_header = f"Range: bytes = {lower_endpoint}-{min(upper_endpoint,content_length)}"
                         msg = get_request_msg(x, request_type="GET", custom_header=local_range_header)
                         s.sendall(msg.encode())
                         response = s.recv(BUFFER_SIZE)
@@ -109,18 +112,16 @@ for x in url_list:
                         else:
                             with open(x[x.rfind('/') + 1:], 'wb') as file:
                                 bytes_recd = 0
-                                while bytes_recd < content_length:
-                                    chunk = s.recv(min(content_length - bytes_recd, BUFFER_SIZE))
-                                    if chunk == b'':
-                                        break
-                                    file.write(chunk)
-                                    bytes_recd = bytes_recd + len(chunk)
-
-                            print(str(counter) + " " + x + " " + local_range_header + " is downloaded")
+                                flag = 0
+                                while bytes_recd < upper_endpoint and flag == 0:
+                                    chunk = s.recv(BUFFER_SIZE)
+                                    if chunk != b'':
+                                        file.write(chunk)
+                                        bytes_recd = bytes_recd + len(chunk)
+                                    else:
+                                        flag = 1
+                                print(str(counter) + " " + x + " " + local_range_header + " is downloaded")
+##########################
                     counter += 1
-                else:
-                    pass
-            else:
-                pass
 s.close()
 print('Connection was closed.')
