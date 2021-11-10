@@ -4,6 +4,8 @@ import os
 
 def get_request_msg(target_download_url: str, request_type="GET", custom_header=""):
     msg = f'{request_type} /{target_download_url[target_download_url.find("/"):]} HTTP/1.1\r\nHost:%s\r\n\r\n' %  target_download_url[:target_download_url.find("/")]
+    # msg += custom_header + '\r\n'
+    # msg += '\r\n'
     return msg
 
 print("Program has been started")
