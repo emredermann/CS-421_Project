@@ -98,12 +98,14 @@ for x in url_list:
             for i in range(0, len(splitted)):
                 if splitted[i].find("Content-Length:") > 0:
                     z = (splitted[i].split(" "))
-
             # GETS content_length
             content_length = int(z[1])
-
             # No range usage.
             if not range_is_given:
+                internal_socket.close()
+                internal_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                server_hostIP = socket.gethostbyname(x[:x.find("/")])
+                internal_socket.connect((server_hostIP, server_port))
                 range_header = f"Range: bytes = 0-{content_length}"
                 msg = get_request_msg(x, request_type="GET", custom_header=range_header)
                 internal_socket.sendall(msg.encode())
@@ -122,6 +124,10 @@ for x in url_list:
                 # Range is given and  satify requirements
 
             elif int(lower_endpoint) <= int(content_length):
+                internal_socket.close()
+                internal_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                server_hostIP = socket.gethostbyname(x[:x.find("/")])
+                internal_socket.connect((server_hostIP, server_port))
                 local_range_header = f"Range:bytes={lower_endpoint}-{upper_endpoint}"
                 msg = get_request_msg(x, request_type="GET", custom_header=local_range_header)
                 internal_socket.sendall(msg.encode())
@@ -135,7 +141,13 @@ for x in url_list:
                         bytes_recd = 0
                         flag = 0
                         while bytes_recd < min(upper_endpoint, int(content_length)) and flag == 0:
-                            chunk = internal_socket.recv(BUFFER_SIZE)
+                            internal_socket.close()
+                            internal_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                            server_hostIP = socket.gethostbyname(x[:x.find("/")])
+                            internal_socket.connect((server_hostIP, server_port))
+                            msg = get_request_msg(x, request_type="GET", custom_header=local_range_header)
+                            internal_socket.sendall(msg.encode())
+                            chunk = internal_socket.recv(1)
                             if chunk != b'':
                                 file.write(chunk)
                                 bytes_recd = bytes_recd + len(chunk)
