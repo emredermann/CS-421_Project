@@ -1,3 +1,14 @@
+"""
+Authors:
+Emre Derman
+Idil Yılmaz
+-----------------
+Bilkent University
+CS 421 - Network Course
+Programming Assignment 1
+Subject : Socket Programming
+"""
+
 import socket
 import sys
 import os
