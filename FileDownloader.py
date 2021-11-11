@@ -140,19 +140,20 @@ for x in url_list:
                     with open(x[x.rfind('/') + 1:], 'wb') as file:
                         bytes_recd = 0
                         flag = 0
+                        internal_socket.close()
+                        internal_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                        server_hostIP = socket.gethostbyname(x[:x.find("/")])
+                        internal_socket.connect((server_hostIP, server_port))
+                        msg = get_request_msg(x, request_type="GET", custom_header=local_range_header)
                         while bytes_recd < min(upper_endpoint, int(content_length)) and flag == 0:
-                            internal_socket.close()
-                            internal_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                            server_hostIP = socket.gethostbyname(x[:x.find("/")])
-                            internal_socket.connect((server_hostIP, server_port))
-                            msg = get_request_msg(x, request_type="GET", custom_header=local_range_header)
-                            internal_socket.sendall(msg.encode())
-                            chunk = internal_socket.recv(1)
-                            if chunk != b'':
-                                file.write(chunk)
-                                bytes_recd = bytes_recd + len(chunk)
-                            else:
-                                flag = 1
+                            if lower_endpoint < bytes_recd < upper_endpoint:
+                                internal_socket.sendall(msg.encode())
+                                chunk = internal_socket.recv(1)
+                                if chunk != b'':
+                                    file.write(chunk)
+                                else:
+                                    flag = 1
+                            bytes_recd = bytes_recd + 1
                         print(str(counter) + " " + x + " " + local_range_header + " is downloaded")
     internal_socket.close()
 #         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
